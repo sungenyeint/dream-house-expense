@@ -69,6 +69,9 @@
             <!-- Amount -->
             <FormInput label="ငွေပမာဏ (ကျပ်)" type="number" v-model="form.amount" />
 
+            <!-- note -->
+            <FormInput label="မှတ်ချက်" type="text" v-model="form.note" />
+
             <button class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl py-3 font-medium transition">
               ✔ သိမ်းမယ်
             </button>
@@ -143,7 +146,7 @@ const addExpense = async () => {
 
 // Fetch expenses realtime
 onMounted(() => {
-  const q = query(expensesCol, orderBy('createdAt', 'desc'))
+  const q = query(expensesCol, orderBy('date', 'desc'))
   onSnapshot(q, (snap) => {
     expenses.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
   })

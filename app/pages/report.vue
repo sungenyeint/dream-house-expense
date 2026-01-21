@@ -98,26 +98,38 @@ onMounted(() => {
 })
 
 /* ---------------- DATE RANGE ---------------- */
+/* ---------------- DATE RANGE (FIXED) ---------------- */
 const startDate = computed(() => {
-  const d = new Date()
   if (reportMode.value === 'week') {
-    d.setDate(d.getDate() - d.getDay() + 1 + offset.value * 7)
+    const d = new Date()
+    const day = d.getDay() || 7 // Sunday fix
+    d.setDate(d.getDate() - day + 1 + offset.value * 7)
+    d.setHours(0, 0, 0, 0)
+    return d
   } else {
-    d.setMonth(d.getMonth() + offset.value, 1)
+    const d = new Date()
+    d.setDate(1) // ⭐ always first day of month
+    d.setMonth(d.getMonth() + offset.value)
+    d.setHours(0, 0, 0, 0)
+    return d
   }
-  return d
 })
 
 const endDate = computed(() => {
-  const d = new Date(startDate.value)
   if (reportMode.value === 'week') {
+    const d = new Date(startDate.value)
     d.setDate(d.getDate() + 6)
+    d.setHours(23, 59, 59, 999)
+    return d
   } else {
+    const d = new Date(startDate.value)
     d.setMonth(d.getMonth() + 1)
-    d.setDate(0)
+    d.setDate(0) // ⭐ last day of month
+    d.setHours(23, 59, 59, 999)
+    return d
   }
-  return d
 })
+
 
 const rangeText = computed(() =>
   `${startDate.value.toISOString().slice(0,10)} ~ ${endDate.value.toISOString().slice(0,10)}`
