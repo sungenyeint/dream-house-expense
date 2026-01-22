@@ -15,15 +15,27 @@
       <!-- Summary -->
       <div class="space-y-3">
         <!-- Grand Total -->
-        <div class="bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl p-4">
-          <p class="text-xs uppercase tracking-wide opacity-70">စုစုပေါင်း</p>
-          <p class="text-2xl font-bold mt-1">
-            {{ grandTotal.toLocaleString() }} ကျပ်
-          </p>
-        </div>
-        <SummaryCard class="bg-purple-50 border-purple-200" title="အလုပ်သမားခ" :value="laborTotal" icon="👷" />
-        <SummaryCard class="bg-green-50 border-green-200" title="ပစ္စည်းဝယ်" :value="materialTotal" icon="🧱" />
-        <SummaryCard class="bg-yellow-50 border-yellow-200" title="အစားသောက်" :value="foodTotal" icon="🍽️" />
+        <SummaryCard class="bg-blue-50 border-blue-200" title="💰 စုစုပေါင်း" :value="grandTotal" color="blue" />
+        <SummaryCard class="bg-purple-50 border-purple-200" title="👷 အလုပ်သမားခ" :value="laborTotal" color="purple">
+          <template #extra>
+            <div class="mt-2 text-xs text-slate-600 space-y-1 border-t pt-2">
+              🧑‍🤝‍🧑 လူဦးရေစုစုပေါင်း - {{ laborCountTotal }} ဦး
+            </div>
+          </template>
+        </SummaryCard>
+
+        <SummaryCard class="bg-green-50 border-green-200" title="🧱 ပစ္စည်းဝယ်" :value="materialTotal" color="green">
+          <template #extra>
+            <div class="mt-2 text-xs text-slate-600 space-y-1 border-t pt-2">
+              <div v-for="(m, i) in materialCategorySummary" :key="i" class="flex justify-between">
+                <span>{{ m.category }}</span>
+                <span class="font-medium">{{ m.details }} ကျပ်</span>
+              </div>
+            </div>
+          </template>
+        </SummaryCard>
+
+        <SummaryCard class="bg-yellow-50 border-yellow-200" title="🍽️ အစားသောက်" :value="foodTotal" color="yellow" />
       </div>
 
       <!-- Form -->
@@ -91,7 +103,7 @@
           <div>
             <p class="text-xs text-slate-400">{{ e.date }}</p>
             <p class="font-medium text-slate-700">
-              <span v-if="e.type === 'labor'">👷 {{ e.worker }} ({{ e.count }} ဦး)</span>
+              <span v-if="e.type === 'labor'">👷 ({{ e.count }} ဦး)</span>
               <span v-else-if="e.type === 'material'">🧱 {{ e.category }} × {{ e.qty }}</span>
               <span v-else>🍽️ အစားသောက်</span>
             </p>
@@ -123,11 +135,12 @@ const isFormOpen = ref(false);
 const form = ref({
   date: new Date().toISOString().slice(0, 10),
   type: 'labor',
-  worker: '',
+  // worker: '',
   count: 1,
   category: '',
   qty: 1,
-  amount: ''
+  amount: '',
+  note: ''
 })
 
 const expensesCol = collection($db, 'expenses')
@@ -166,6 +179,41 @@ const foodTotal = computed(() =>
   expenses.value.filter(e => e.type === 'food')
     .reduce((s, e) => s + Number(e.amount), 0)
 )
+
+const laborCountTotal = computed(() =>
+  expenses.value
+    .filter(e => e.type === 'labor')
+    .reduce((s, e) => s + Number(e.count || 0), 0)
+)
+
+const materialCategorySummary = computed(() => {
+  const map = {}
+
+  expenses.value
+    .filter(e => e.type === 'material')
+    .forEach(e => {
+      const cat = e.category || 'အခြား'
+      const qty = Number(e.qty || 0)
+      const unitPrice = Number(e.amount || 0) / qty
+
+      if (!map[cat]) {
+        map[cat] = { totalQty: 0, unitPrice: unitPrice }
+      }
+
+      map[cat].totalQty += qty
+      // keep unitPrice (assuming same unit price for all same category)
+      map[cat].unitPrice = unitPrice
+    })
+
+  return Object.entries(map).map(([category, data]) => {
+    const totalAmount = data.totalQty * data.unitPrice
+    return {
+      category,
+      details: `${data.totalQty} * ${data.unitPrice.toLocaleString()} = ${totalAmount.toLocaleString()}`
+    }
+  })
+})
+
 
 const grandTotal = computed(() =>
   laborTotal.value + materialTotal.value + foodTotal.value
