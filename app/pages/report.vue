@@ -307,7 +307,7 @@ const materialCategorySummary = computed(() => {
       category,
       qty: data.totalQty,
       price: data.unitPrice,
-      details: `${category} ${data.totalQty} * ${data.unitPrice.toLocaleString()} = ${totalAmount.toLocaleString()}`
+      details: `${data.totalQty} * ${data.unitPrice.toLocaleString()} = ${totalAmount.toLocaleString()}`
     }
   })
 })
