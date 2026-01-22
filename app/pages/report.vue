@@ -2,18 +2,18 @@
   <div class="min-h-screen bg-slate-50 p-4 pb-20">
     <div class="max-w-md mx-auto space-y-4">
 
-      <!-- Header + Week Nav -->
-      <div class="bg-white rounded-2xl shadow p-4 flex items-center justify-between">
-        <button @click="offset--" class="text-xl">⬅️</button>
+      <!-- Header -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between">
+        <button @click="offset--" class="text-xl text-slate-500 hover:text-slate-700">⬅️</button>
 
         <div class="text-center">
-          <h1 class="text-lg font-semibold mb-1">
+          <h1 class="text-base font-semibold text-slate-800">
             📊 {{ reportMode === 'week' ? 'အပတ်စဉ် စာရင်း' : 'လစဉ် စာရင်း' }}
           </h1>
-          <p class="text-xs text-slate-500">{{ rangeText }}</p>
+          <p class="text-xs text-slate-500 mt-1">{{ rangeText }}</p>
         </div>
 
-        <button @click="offset++" class="text-xl">➡️</button>
+        <button @click="offset++" class="text-xl text-slate-500 hover:text-slate-700">➡️</button>
       </div>
 
       <!-- Mode Switch -->
@@ -29,17 +29,31 @@
         </button>
       </div>
 
+      <!-- PDF -->
+      <button @click="exportPDF"
+        class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-medium transition">
+        📄 PDF Download
+      </button>
+
       <!-- Summary -->
       <div class="space-y-3">
-        <SummaryCard title="💰 စုစုပေါင်း" :value="grandTotal" color="blue" />
-        <SummaryCard title="👷 အလုပ်သမားခ" :value="laborTotal" color="purple">
+        <!-- Grand Total -->
+        <SummaryCard class="bg-white border border-slate-200 border-l-4 border-l-blue-400"
+          title="💰 စုစုပေါင်းကုန်ကျငွေ" :value="grandTotal" />
+
+        <!-- Labor -->
+        <SummaryCard class="bg-white border border-slate-200 border-l-4 border-l-slate-500" title="👷 အလုပ်သမားခ"
+          :value="laborTotal">
           <template #extra>
-            <div class="mt-2 text-xs text-slate-600 space-y-1 border-t pt-2">
-              🧑‍🤝‍🧑 လူဦးရေစုစုပေါင်း - {{ laborCountTotal }} ဦး
+            <div class="mt-2 text-xs text-slate-600 border-t pt-2">
+              လူဦးရေစုစုပေါင်း — {{ laborCountTotal }} ဦး
             </div>
           </template>
         </SummaryCard>
-        <SummaryCard title="🧱 ပစ္စည်းဝယ်" :value="materialTotal" color="green">
+
+        <!-- Material -->
+        <SummaryCard class="bg-white border border-slate-200 border-l-4 border-l-slate-600" title="🧱 ပစ္စည်းဝယ်"
+          :value="materialTotal">
           <template #extra>
             <div class="mt-2 text-xs text-slate-600 space-y-1 border-t pt-2">
               <div v-for="(m, i) in materialCategorySummary" :key="i" class="flex justify-between">
@@ -49,12 +63,15 @@
             </div>
           </template>
         </SummaryCard>
-        <SummaryCard title="🍽️ အစားသောက်" :value="foodTotal" color="yellow" />
+
+        <!-- Food -->
+        <SummaryCard class="bg-white border border-slate-200 border-l-4 border-l-slate-400" title="🍽️ အစားသောက်"
+          :value="foodTotal" />
       </div>
 
       <!-- Daily -->
-      <div class="bg-white rounded-2xl shadow p-4">
-        <h2 class="font-semibold mb-3">📅 နေ့အလိုက်</h2>
+      <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <h2 class="font-semibold text-slate-800 mb-3">📅 နေ့အလိုက်</h2>
 
         <div v-for="(d, i) in dailyBreakdown" :key="i" class="flex justify-between border-b py-2 last:border-0 text-sm">
           <span class="text-slate-600">{{ d.date }}</span>
@@ -65,132 +82,94 @@
           စာရင်းမရှိပါ
         </p>
       </div>
-
-      <!-- PDF -->
-      <button @click="exportPDF" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-medium">
-        📄 PDF Download
-      </button>
-
     </div>
   </div>
 
-  <div class="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around p-2">
-    <NuxtLink to="/" class="flex flex-col items-center text-sm">🏠<span>Home</span></NuxtLink>
-    <NuxtLink to="/report" class="flex flex-col items-center text-sm">📊<span>Report</span></NuxtLink>
+  <!-- Bottom Nav -->
+  <div class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 flex justify-around p-2">
+    <NuxtLink to="/" class="flex flex-col items-center text-xs text-slate-600">
+      🏠 <span>Home</span>
+    </NuxtLink>
+    <NuxtLink to="/report" class="flex flex-col items-center text-xs text-slate-600">
+      📊 <span>Report</span>
+    </NuxtLink>
   </div>
 
-  <!-- ================= PDF CONTENT ================= -->
-  <div id="report-pdf" class="bg-white"
-    style="width:210mm; min-height:297mm; padding:15mm; font-family: system-ui; box-sizing: border-box;">
+  <!-- PDF CONTENT -->
+  <div id="report-pdf" class="bg-white" style="width:210mm; min-height:297mm; padding:15mm; font-family: system-ui;">
+    <h1 class="text-xl font-bold text-center mb-4">
+      🏠 အိမ်ဆောက် ကုန်ကျစရိတ် စာရင်း
+    </h1>
 
-    <!-- HEADER -->
-    <div class="text-center mb-8">
-      <h1 class="text-2xl font-bold mb-2">🏠 အိမ်ဆောက် ကုန်ကျစရိတ် စာရင်း</h1>
-      <div class="text-lg font-medium text-gray-700">{{ rangeText }}</div>
-      <div class="text-sm text-gray-500 mt-1">
-        {{ reportMode === 'week' ? 'အပတ်စဉ် စာရင်း' : 'လစဉ် စာရင်း' }}
-      </div>
-    </div>
+    <p class="text-center text-sm text-slate-500 mb-6 border-b pb-4">
+      {{ rangeText }} ({{ reportMode === 'week' ? 'အပတ်စဉ်' : 'လစဉ်' }})
+    </p>
 
     <!-- SIMPLE SUMMARY CARDS -->
     <div class="mb-4 space-y-2">
       <!-- GRAND TOTAL -->
-      <div class="p-3 border border-blue-300 bg-blue-50 rounded">
-        <div class="font-bold text-sm mb-1">စုစုပေါင်း - {{ grandTotal.toLocaleString() }} ကျပ်</div>
-      </div>
+      <div class="font-bold text-lg mb-1">စုစုပေါင်း - {{ grandTotal.toLocaleString() }} ကျပ်</div>
 
       <!-- LABOR -->
-      <div class="p-3 border border-gray-200 bg-white rounded">
-        <div class="font-bold text-sm mb-1">အလုပ်သမားခ - {{ laborTotal.toLocaleString() }} ကျပ်</div>
-        <div class="text-xs text-gray-600">
-          လူဦးရေ: {{ laborCountTotal }} ဦး
-        </div>
+      <div class="font-bold text-lg mb-1">အလုပ်သမားခ - {{ laborTotal.toLocaleString() }} ကျပ်</div>
+      <div class="text-xs text-gray-600">
+        လူဦးရေ = {{ laborCountTotal }} ဦး
       </div>
 
       <!-- MATERIAL -->
-      <div class="p-3 border border-gray-200 bg-white rounded">
-        <div class="font-bold text-sm pb-2 border-b">ပစ္စည်းဝယ် - {{ materialTotal.toLocaleString() }} ကျပ်</div>
-        <div class="text-xs text-gray-600 mt-1">
-          <div v-for="(m, i) in materialCategorySummary" :key="i">
-            • {{ m.details }} ကျပ်
-          </div>
+      <div class="font-bold text-lg pb-2">ပစ္စည်းဝယ် - {{ materialTotal.toLocaleString() }} ကျပ်</div>
+      <div class="text-xs text-gray-600 mt-1">
+        <div v-for="(m, i) in materialCategorySummary" :key="i" class="mb-1">
+          • {{ m.category }} - {{ m.details }} ကျပ်
         </div>
       </div>
 
       <!-- FOOD -->
-      <div class="p-3 border border-gray-200 bg-white rounded">
-        <div class="font-bold text-sm mb-1">အစားသောက် - {{ foodTotal.toLocaleString() }} ကျပ်</div>
-      </div>
+      <div class="font-bold text-lg mb-1">အစားသောက် - {{ foodTotal.toLocaleString() }} ကျပ်</div>
     </div>
 
-    <!-- DETAILS TABLE WITH ROW UNDERLINES -->
-    <div class="mb-8">
-      <h2 class="text-lg font-bold mb-3 pb-4 border-b border-gray-300">အသေးစိတ် စာရင်း</h2>
-      <div class="w-full">
-        <!-- Table Header -->
-        <div class="flex border-b border-gray-400 pb-4 mb-1 font-bold text-sm">
-          <div class="w-1/4 pl-1">နေ့စွဲ</div>
-          <div class="w-1/4 pl-1">အမျိုးအစား</div>
-          <div class="w-2/4 pl-1">အကြောင်းအရာ</div>
-          <div class="w-1/4 pl-1 text-right">ကျပ်</div>
-        </div>
-
-        <!-- Table Rows -->
-        <div v-for="(expense, index) in filtered" :key="index" class="flex border-b border-gray-300 pb-2 text-sm">
-          <div class="w-1/4 pl-1">{{ expense.date }}</div>
-          <div class="w-1/4 pl-1">
-            <span v-if="expense.type === 'labor'">အလုပ်သမား</span>
-            <span v-else-if="expense.type === 'material'">ပစ္စည်း</span>
-            <span v-else>အစားသောက်</span>
-          </div>
-          <div class="w-2/4 pl-1">
-            <div>{{ expense.type === 'material' ? expense.category : expense.type === 'food' ? '-' : '' }}</div>
-            <div class="text-xs text-gray-500">
-              <span v-if="expense.qty && expense.type === 'material'">
-                {{ expense.qty }} x {{ (expense.amount / expense.qty).toLocaleString() }} ကျပ်
-              </span>
-              <span v-if="expense.count && expense.type === 'labor'">
-                {{ expense.count }} ဦး
-              </span>
+    <h2 class="text-lg font-bold mb-3 py-4 border-b border-top border-gray-300 text-center">အသေးစိတ် စာရင်း</h2>
+    <table class="w-full text-sm border-collapse">
+      <thead>
+        <tr class="border-b">
+          <th class="text-left py-2">နေ့စွဲ</th>
+          <th class="text-left py-2">အမျိုးအစား</th>
+          <th class="text-left py-2">အကြောင်းအရာ</th>
+          <th class="text-right py-2">ကျပ်</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(e, i) in filtered" :key="i" class="border-b">
+          <td class="py-2">{{ e.date }}</td>
+          <td class="py-2">{{ e.type === 'labor' ? 'အလုပ်သမားခ' : e.type === 'material' ? 'ပစ္စည်းဝယ်' : 'အစားသောက်' }}
+          </td>
+          <td class="py-2">
+            <div v-if="e.type === 'material'">{{ e.category }} - {{ e.qty }} × {{ (e.amount / e.qty).toLocaleString() }}
             </div>
-          </div>
-          <div class="w-1/4 pl-1 text-right font-medium">
-            {{ Number(expense.amount).toLocaleString() }}
-          </div>
-        </div>
+            <div v-if="e.type === 'labor'">{{ e.count }} ဦး</div>
+          </td>
+          <td class="py-2 text-right">{{ e.amount.toLocaleString() }}</td>
+        </tr>
+      </tbody>
+    </table>
 
-        <!-- Empty State -->
-        <div v-if="filtered.length === 0" class="text-center py-4 text-gray-500 text-sm">
-          ဒီကာလအတွင်း စာရင်းမရှိပါ
-        </div>
-
-        <!-- Total Row -->
-        <div v-if="filtered.length > 0" class="flex border-gray-500 pt-2 mt-2 font-bold">
-          <div class="w-3/4 pl-1 text-right">စုစုပေါင်း:</div>
-          <div class="w-1/4 pl-1 text-right">{{ grandTotal.toLocaleString() }} ကျပ်</div>
-        </div>
-      </div>
+    <div class="text-right font-bold mt-4">
+      စုစုပေါင်း - {{ grandTotal.toLocaleString() }} ကျပ်
     </div>
 
-    <!-- FOOTER -->
     <div class="mt-8 pt-3 border-t border-gray-300 text-xs text-gray-500">
       <div class="flex justify-between">
         <div>
-          <div>ပြင်ဆင်သည့်ရက်စွဲ: {{ new Date().toLocaleDateString() }}</div>
-          <div class="mt-0.5">စုစုပေါင်းစာရင်း: {{ filtered.length }} ခု</div>
+          <div>ပြင်ဆင်သည့်ရက်စွဲ - {{ new Date().toLocaleDateString() }}</div>
+          <div class="mt-0.5">စုစုပေါင်းစာရင်း - {{ filtered.length }} ခု</div>
         </div>
         <div class="text-right">
-          <div>စာရင်းအမျိုးအစား: {{ reportMode === 'week' ? 'အပတ်စဉ်' : 'လစဉ်' }}</div>
-          <div class="mt-0.5">စာမျက်နှာ: 1</div>
+          <div>စာရင်းအမျိုးအစား - {{ reportMode === 'week' ? 'အပတ်စဉ်' : 'လစဉ်' }}</div>
+          <div class="mt-0.5">စာမျက်နှာ - 1</div>
         </div>
       </div>
     </div>
-
   </div>
-
-  <!-- ================= END PDF CONTENT ================= -->
-
-
 </template>
 
 <script setup>
@@ -201,12 +180,11 @@ import jsPDF from 'jspdf'
 
 const { $db } = useNuxtApp()
 
-/* ---------------- STATE ---------------- */
 const expenses = ref([])
-const reportMode = ref('week') // week | month
+const reportMode = ref('week')
 const offset = ref(0)
 
-/* ---------------- FIREBASE ---------------- */
+/* Firebase */
 onMounted(() => {
   const q = query(collection($db, 'expenses'), orderBy('createdAt', 'desc'))
   onSnapshot(q, snap => {
@@ -214,43 +192,33 @@ onMounted(() => {
   })
 })
 
-/* ---------------- DATE RANGE ---------------- */
+/* Date Range */
 const startDate = computed(() => {
+  const d = new Date()
   if (reportMode.value === 'week') {
-    const d = new Date()
-    const day = d.getDay() || 7 // Sunday fix
+    const day = d.getDay() || 7
     d.setDate(d.getDate() - day + 1 + offset.value * 7)
-    d.setHours(0, 0, 0, 0)
-    return d
   } else {
-    const d = new Date()
     d.setDate(1)
     d.setMonth(d.getMonth() + offset.value)
-    d.setHours(0, 0, 0, 0)
-    return d
   }
+  d.setHours(0, 0, 0, 0)
+  return d
 })
 
 const endDate = computed(() => {
-  if (reportMode.value === 'week') {
-    const d = new Date(startDate.value)
-    d.setDate(d.getDate() + 6)
-    d.setHours(23, 59, 59, 999)
-    return d
-  } else {
-    const d = new Date(startDate.value)
-    d.setMonth(d.getMonth() + 1)
-    d.setDate(0)
-    d.setHours(23, 59, 59, 999)
-    return d
-  }
+  const d = new Date(startDate.value)
+  if (reportMode.value === 'week') d.setDate(d.getDate() + 6)
+  else d.setMonth(d.getMonth() + 1, 0)
+  d.setHours(23, 59, 59, 999)
+  return d
 })
 
 const rangeText = computed(() =>
   `${startDate.value.toISOString().slice(0, 10)} ~ ${endDate.value.toISOString().slice(0, 10)}`
 )
 
-/* ---------------- FILTER ---------------- */
+/* Filter */
 const filtered = computed(() =>
   expenses.value.filter(e => {
     if (!e.date) return false
@@ -259,59 +227,43 @@ const filtered = computed(() =>
   })
 )
 
-/* ---------------- TOTALS ---------------- */
+/* Totals */
 const sumBy = type =>
-  filtered.value
-    .filter(e => e.type === type)
-    .reduce((s, e) => s + Number(e.amount), 0)
+  filtered.value.filter(e => e.type === type).reduce((s, e) => s + Number(e.amount), 0)
 
 const laborTotal = computed(() => sumBy('labor'))
 const materialTotal = computed(() => sumBy('material'))
 const foodTotal = computed(() => sumBy('food'))
 const grandTotal = computed(() => laborTotal.value + materialTotal.value + foodTotal.value)
 
-/* ---------------- DAILY ---------------- */
+const laborCountTotal = computed(() =>
+  filtered.value.filter(e => e.type === 'labor').reduce((s, e) => s + Number(e.count || 0), 0)
+)
+
 const dailyBreakdown = computed(() => {
   const map = {}
   filtered.value.forEach(e => {
-    if (!map[e.date]) map[e.date] = 0
-    map[e.date] += Number(e.amount)
+    map[e.date] = (map[e.date] || 0) + Number(e.amount)
   })
   return Object.entries(map).map(([date, total]) => ({ date, total }))
 })
 
-const laborCountTotal = computed(() =>
-  filtered.value
-    .filter(e => e.type === 'labor')
-    .reduce((s, e) => s + Number(e.count || 0), 0)
-)
-
-/* ---------------- MATERIAL CATEGORY SUMMARY ---------------- */
 const materialCategorySummary = computed(() => {
   const map = {}
-
-  filtered.value
-    .filter(e => e.type === 'material')
-    .forEach(e => {
-      const cat = e.category || 'အခြား'
-      const qty = Number(e.qty || 0)
-      const unitPrice = Number(e.amount || 0) / qty
-
-      if (!map[cat]) map[cat] = { totalQty: 0, unitPrice }
-      map[cat].totalQty += qty
-    })
-
-  return Object.entries(map).map(([category, data]) => {
-    const totalAmount = data.totalQty * data.unitPrice
-    return {
-      category,
-      qty: data.totalQty,
-      price: data.unitPrice,
-      details: `${data.totalQty} * ${data.unitPrice.toLocaleString()} = ${totalAmount.toLocaleString()}`
-    }
+  filtered.value.filter(e => e.type === 'material').forEach(e => {
+    const cat = e.category || 'အခြား'
+    const qty = Number(e.qty || 1)
+    const price = e.amount / qty
+    if (!map[cat]) map[cat] = { qty: 0, price }
+    map[cat].qty += qty
   })
+  return Object.entries(map).map(([category, d]) => ({
+    category,
+    details: `${d.qty} × ${d.price.toLocaleString()}`
+  }))
 })
 
+/* PDF */
 const exportPDF = async () => {
   const element = document.getElementById('report-pdf')
   if (!element) return
@@ -399,32 +351,14 @@ const exportPDF = async () => {
   }
 }
 
-/* ---------------- UI ---------------- */
 const activeBtn = 'bg-blue-500 text-white'
-const inactiveBtn = 'bg-white border text-slate-600'
+const inactiveBtn = 'bg-white border border-slate-200 text-slate-600'
 </script>
 
 <style scoped>
-/* PDF specific styles */
 #report-pdf {
   position: fixed;
-  left: -10000px;
+  left: -9999px;
   top: 0;
-  background: white;
-  z-index: -9999;
-}
-
-#report-pdf * {
-  font-family: 'Myanmar3', 'Padauk', 'Noto Sans Myanmar', sans-serif;
-  line-height: 1.4;
-}
-
-/* Ensure proper spacing for printing */
-@media print {
-  #report-pdf {
-    position: static;
-    margin: 0;
-    padding: 15mm;
-  }
 }
 </style>

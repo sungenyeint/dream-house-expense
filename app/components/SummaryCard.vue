@@ -1,5 +1,5 @@
 <template>
-  <div :class="boxClass">
+  <div class="rounded-2xl p-4 shadow-sm">
     <div class="flex justify-between items-center"
         @click="expanded = !expanded">
       <div>
@@ -40,21 +40,9 @@ import { ref } from 'vue'
 const props = defineProps({
   title: { type: String, required: true },
   value: { type: [Number, String], required: true },
-  color: { type: String, default: 'blue' }
 })
 
 const expanded = ref(false)
-
-const colors = {
-  purple: 'bg-purple-50 border-purple-200 text-purple-800',
-  green: 'bg-green-50 border-green-200 text-green-800',
-  yellow: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-  blue: 'bg-blue-50 border-blue-200 text-blue-800'
-}
-
-const boxClass = computed(() =>
-  `border rounded-2xl p-4 shadow-sm ${colors[props.color] || colors.blue}`
-)
 </script>
 
 <style scoped>
