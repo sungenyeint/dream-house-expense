@@ -46,7 +46,7 @@
           :value="laborTotal">
           <template #extra>
             <div class="mt-2 text-xs text-slate-600 border-t pt-2">
-              လူဦးရေစုစုပေါင်း — {{ laborCountTotal }} ဦး
+              လူဦးရေစုစုပေါင်း = {{ laborCountTotal }} ဦး
             </div>
           </template>
         </SummaryCard>
@@ -55,9 +55,9 @@
         <SummaryCard class="bg-white border border-slate-200 border-l-4 border-l-slate-600" title="🧱 ပစ္စည်းဝယ်"
           :value="materialTotal">
           <template #extra>
-            <div class="mt-2 text-xs text-slate-600 space-y-1 border-t pt-2">
-              <div v-for="(m, i) in materialCategorySummary" :key="i" class="flex justify-between">
-                <span>{{ m.category }}</span>
+            <div class="mt-2 text-xs text-slate-600 space-y-1 border-t">
+              <div v-for="(m, i) in materialCategorySummary" :key="i" class="flex justify-between pt-2">
+                <span>{{ i + 1 }}. {{ m.category }}</span>
                 <span class="font-medium">{{ m.details }} ကျပ်</span>
               </div>
             </div>
