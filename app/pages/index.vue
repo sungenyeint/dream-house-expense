@@ -83,7 +83,7 @@
       </div>
 
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-        <h2 class="font-semibold mb-4">🏠 ပုံများ</h2>
+        <h2 class="font-semibold mb-4">➕ ပုံတင်မည်</h2>
 
         <input
           ref="fileInput"
@@ -97,9 +97,9 @@
         <button
           @click="saveHouseImages"
           :disabled="uploading || !selectedFiles.length"
-          class="w-full bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl py-3 font-medium mt-4 disabled:opacity-50"
+          class="w-full bg-green-500 hover:bg-green-600 text-white rounded-xl py-3 font-medium mt-4 disabled:opacity-50"
         >
-          🏠 အိမ်ဆောက်ပုံ သိမ်းမယ်
+          🏠 သိမ်းမယ်
         </button>
       </div>
 
@@ -108,20 +108,40 @@
       </div>
 
       <div class="bg-white rounded-2xl p-5 border mt-6">
-        <h2 class="font-semibold mb-3">🏠 အိမ်ဆောက်ပုံများ</h2>
+        <h2 class="font-semibold mb-3">🏠 Gallary</h2>
 
         <div v-if="!houseImages.length" class="text-xs text-slate-400">
           ပုံမရှိသေးပါ
         </div>
 
-        <div class="grid grid-cols-3 gap-2">
-          <img
-            v-for="img in houseImages"
-            :key="img.id"
-            :src="img.url"
-            class="h-28 w-full object-cover rounded-lg border"
-          />
+        <div v-for="group in groupedImages" :key="group.label" class="mb-6">
+          <h3 class="text-sm font-semibold mb-2 text-slate-600">
+            🧾 {{ group.label }}
+          </h3>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div
+              v-for="(img, i) in group.images.slice(0, 6)"
+              :key="img.id"
+              class="relative"
+              @click="openViewer(img)"
+            >
+              <img
+                :src="img.url"
+                class="h-28 w-full object-cover rounded-lg border cursor-pointer"
+              />
+
+              <!-- +more -->
+              <div
+                v-if="i === 5 && group.images.length > 6"
+                class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-lg font-semibold rounded-lg"
+              >
+                +{{ group.images.length - 6 }}
+              </div>
+            </div>
+          </div>
         </div>
+
       </div>
 
       <!-- Add Form -->
@@ -245,11 +265,105 @@
       📊 <span>Report</span>
     </NuxtLink>
   </div>
+
+  <div
+    v-if="showViewer"
+    class="fixed inset-0 bg-black z-50 flex items-center justify-center"
+    @touchstart="onTouchStart"
+    @touchend="onTouchEnd"
+  >
+    <!-- Close -->
+    <button
+      @click="closeViewer"
+      class="absolute top-4 right-4 text-white text-2xl bg-black/40 p-2 rounded-full"
+    >
+      ✕
+    </button>
+
+    <!-- Top Left Actions -->
+    <div class="absolute top-6 right-14 flex gap-2">
+      <!-- Download -->
+      <button
+        @click="downloadImage"
+        class="bg-blue-500 backdrop-blur text-white py-1 px-2 rounded-xl"
+        title="Download"
+      >
+        📥 Save image
+      </button>
+
+      <!-- Delete -->
+      <button
+        @click="confirmDelete = true"
+        class="bg-red-500 backdrop-blur text-white py-1 px-2 rounded-xl"
+        title="Delete"
+      >
+        🗑️ Delete
+      </button>
+    </div>
+
+    <!-- Prev -->
+    <button
+      @click="prevImage"
+      class="absolute left-2 text-white text-4xl select-none"
+    >
+      ‹
+    </button>
+
+    <!-- Image -->
+    <img
+      :src="activeImage.url"
+      @dblclick="toggleZoom"
+      :style="{ transform: `scale(${scale})` }"
+      class="max-h-[85vh] max-w-[90vw] transition-transform duration-300 shadow-2xl rounded-xl"
+    />
+
+    <!-- Next -->
+    <button
+      @click="nextImage"
+      class="absolute right-2 text-white text-4xl select-none"
+    >
+      ›
+    </button>
+
+    <!-- Delete Confirm Modal -->
+    <div
+      v-if="confirmDelete"
+      class="absolute inset-0 bg-black/60 flex items-center justify-center"
+    >
+      <div class="bg-white rounded-xl p-5 w-72 text-center space-y-4">
+        <p class="font-semibold text-gray-800">
+          Delete this image?
+        </p>
+
+        <p class="text-sm text-gray-500">
+          This action cannot be undone
+        </p>
+
+        <div class="flex gap-3">
+          <button
+            @click="confirmDelete = false"
+            class="flex-1 py-2 rounded-lg border"
+          >
+            Cancel
+          </button>
+
+          <button
+            @click="deleteImage"
+            class="flex-1 py-2 rounded-lg bg-red-500 text-white"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 </template>
 
 <script setup>
 import { ref, onMounted, computed, nextTick } from 'vue'
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc } from 'firebase/firestore'
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore'
 
 const { $db } = useNuxtApp()  // <-- here
 
@@ -281,6 +395,87 @@ const form = ref({
 
 const editingId = ref(null)
 const formEl = ref(null)
+
+const showViewer = ref(false)
+const activeImage = ref(null)
+const scale = ref(1)
+const confirmDelete = ref(false)
+
+const groupedImages = computed(() => {
+  const groups = {}
+
+  houseImages.value.forEach(img => {
+    if (!img.createdAt) return
+    const date = img.createdAt.toDate().toDateString()
+
+    if (!groups[date]) groups[date] = []
+    groups[date].push(img)
+  })
+
+  return Object.entries(groups).map(([date, imgs], i) => ({
+    label: `(${date})`,
+    images: imgs
+  }))
+})
+
+// touch
+let startX = 0
+
+const openViewer = (img) => {
+  activeImage.value = img
+  scale.value = 1
+  showViewer.value = true
+}
+
+const closeViewer = () => {
+  showViewer.value = false
+}
+
+const nextImage = () => {
+  const idx = houseImages.value.findIndex(i => i.id === activeImage.value.id)
+  if (idx < houseImages.value.length - 1)
+    activeImage.value = houseImages.value[idx + 1]
+}
+
+const prevImage = () => {
+  const idx = houseImages.value.findIndex(i => i.id === activeImage.value.id)
+  if (idx > 0)
+    activeImage.value = houseImages.value[idx - 1]
+}
+
+const onTouchStart = (e) => {
+  startX = e.touches[0].clientX
+}
+
+const onTouchEnd = (e) => {
+  const endX = e.changedTouches[0].clientX
+  const diff = startX - endX
+
+  if (diff > 50) nextImage()
+  if (diff < -50) prevImage()
+}
+
+const toggleZoom = () => {
+  scale.value = scale.value === 1 ? 2 : 1
+}
+
+const downloadImage = () => {
+  window.open(activeImage.value.url, '_blank')
+}
+
+const deleteImage = async () => {
+  if (!activeImage.value) return
+  // 🔥 Remove from Firestore
+  await deleteDoc(doc($db, 'house_images', activeImage.value.id))
+
+  // 🔥 Update UI
+  houseImages.value = houseImages.value.filter(
+    img => img.id !== activeImage.value.id
+  )
+
+  confirmDelete.value = false
+  closeViewer()
+}
 
 const expensesCol = collection($db, 'expenses')
 
