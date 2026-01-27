@@ -82,6 +82,48 @@
           :value="foodTotal" />
       </div>
 
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h2 class="font-semibold mb-4">🏠 ပုံများ</h2>
+
+        <input
+          ref="fileInput"
+          type="file"
+          multiple
+          accept="image/*"
+          class="w-full text-sm"
+          @change="onFileChange"
+        />
+
+        <button
+          @click="saveHouseImages"
+          :disabled="uploading || !selectedFiles.length"
+          class="w-full bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl py-3 font-medium mt-4 disabled:opacity-50"
+        >
+          🏠 အိမ်ဆောက်ပုံ သိမ်းမယ်
+        </button>
+      </div>
+
+      <div v-if="uploading" class="text-xs text-slate-500">
+        ⏳ ပုံတင်နေသည်...
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border mt-6">
+        <h2 class="font-semibold mb-3">🏠 အိမ်ဆောက်ပုံများ</h2>
+
+        <div v-if="!houseImages.length" class="text-xs text-slate-400">
+          ပုံမရှိသေးပါ
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <img
+            v-for="img in houseImages"
+            :key="img.id"
+            :src="img.url"
+            class="h-28 w-full object-cover rounded-lg border"
+          />
+        </div>
+      </div>
+
       <!-- Add Form -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
         <button @click="isFormOpen = !isFormOpen"
@@ -213,6 +255,12 @@ const { $db } = useNuxtApp()  // <-- here
 
 const expenses = ref([]);
 const isFormOpen = ref(false);
+const uploadImages = ref([])   // Cloudinary URLs (TEMP)
+const houseImages = ref([])    // Firestore images (DB)
+
+const uploading = ref(false)
+const fileInput = ref(null)
+const selectedFiles = ref([])
 
 // Budget
 const budget = ref(21300000);
@@ -231,10 +279,56 @@ const form = ref({
   status: 'completed',
 })
 
-const expensesCol = collection($db, 'expenses')
-
 const editingId = ref(null)
 const formEl = ref(null)
+
+const expensesCol = collection($db, 'expenses')
+
+const onFileChange = (e) => {
+  selectedFiles.value = Array.from(e.target.files)
+}
+
+const saveHouseImages = async () => {
+  if (!selectedFiles.value.length) return
+
+  uploading.value = true
+
+  const urls = await Promise.all(
+    Array.from(selectedFiles.value).map(async (file) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', 'house_progress')
+
+      const res = await fetch(
+        'https://api.cloudinary.com/v1_1/dfi7yg5yj/image/upload',
+        { method: 'POST', body: formData }
+      )
+
+      const data = await res.json()
+      return data.secure_url
+    })
+  )
+
+  uploadImages.value.push(...urls)
+
+  if (!uploadImages.value.length) return
+
+  const col = collection($db, 'house_images')
+
+  for (const url of uploadImages.value) {
+    await addDoc(col, {
+      url,
+      createdAt: serverTimestamp(),
+    })
+  }
+
+  // reset
+  uploadImages.value = []
+  selectedFiles.value = []
+  fileInput.value.value = null
+  uploading.value = false
+}
+
 
 // Add expense
 const addExpense = async () => {
@@ -315,6 +409,18 @@ onMounted(() => {
   } catch (e) {
     // ignore (SSR or restricted)
   }
+
+  const imageQuery = query(
+    collection($db, 'house_images'),
+    orderBy('createdAt', 'desc')
+  )
+
+  onSnapshot(imageQuery, snap => {
+    houseImages.value = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }))
+  })
 });
 
 const laborTotal = computed(() =>
