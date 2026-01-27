@@ -22,7 +22,8 @@
             <div class="mt-2 text-xs text-slate-600 space-y-2 border-t pt-2">
               <div v-if="!isEditingBudget" class="flex items-center justify-between">
                 <div>လက်ကျန် = <span class="font-medium">{{ currentAmount.toLocaleString() }} ကျပ်</span></div>
-                <button @click="startEditBudget" class="inline-flex items-center gap-1 text-sm text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-md">
+                <button @click="startEditBudget"
+                  class="inline-flex items-center gap-1 text-sm text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-md">
                   <span class="text-xs">✏️</span>
                   <span>edit</span>
                 </button>
@@ -45,7 +46,7 @@
 
         <!-- Grand Total -->
         <SummaryCard class="bg-white border border-slate-200 border-l-4 border-l-blue-400"
-          title="💰 စုစုပေါင်းကုန်ကျငွေ" :value="grandTotal" >
+          title="💰 စုစုပေါင်းကုန်ကျငွေ" :value="grandTotal">
           <template #extra>
             <div class="mt-2 text-xs text-slate-600  border-t pt-2">
               <p>✅ ရှင်းပြီး = {{ completedTotal.toLocaleString() }} ကျပ်</p>
@@ -85,20 +86,10 @@
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
         <h2 class="font-semibold mb-4">➕ ပုံတင်မည်</h2>
 
-        <input
-          ref="fileInput"
-          type="file"
-          multiple
-          accept="image/*"
-          class="w-full text-sm"
-          @change="onFileChange"
-        />
+        <input ref="fileInput" type="file" multiple accept="image/*" class="w-full text-sm" @change="onFileChange" />
 
-        <button
-          @click="saveHouseImages"
-          :disabled="uploading || !selectedFiles.length"
-          class="w-full bg-green-500 hover:bg-green-600 text-white rounded-xl py-3 font-medium mt-4 disabled:opacity-50"
-        >
+        <button @click="saveHouseImages" :disabled="uploading || !selectedFiles.length"
+          class="w-full bg-green-500 hover:bg-green-600 text-white rounded-xl py-3 font-medium mt-4 disabled:opacity-50">
           🏠 သိမ်းမယ်
         </button>
       </div>
@@ -108,37 +99,38 @@
       </div>
 
       <div class="bg-white rounded-2xl p-5 border mt-6">
-        <h2 class="font-semibold mb-3">🏠 Gallary</h2>
+        <h2 class="font-semibold mb-3">🏠 လုပ်ငန်းတိုးတက်မှု မှတ်တမ်း</h2>
 
-        <div v-if="!houseImages.length" class="text-xs text-slate-400">
+        <div v-if="!groupedImages.length" class="text-xs text-slate-400">
           ပုံမရှိသေးပါ
         </div>
 
-        <div v-for="group in groupedImages" :key="group.label" class="mb-6">
-          <h3 class="text-sm font-semibold mb-2 text-slate-600">
-            🧾 {{ group.label }}
-          </h3>
+        <div class="overflow-x-auto scrollbar-hide">
+          <div class="flex gap-6 snap-x snap-mandatory">
 
-          <div class="grid grid-cols-3 gap-2">
-            <div
-              v-for="(img, i) in group.images.slice(0, 6)"
-              :key="img.id"
-              class="relative"
-              @click="openViewer(img)"
-            >
-              <img
-                :src="img.url"
-                class="h-28 w-full object-cover rounded-lg border cursor-pointer"
-              />
+            <div v-for="group in groupedImages" :key="group.label" class="snap-start shrink-0 w-full max-w-md">
+              <!-- Group Card -->
+              <div class="bg-gray-100 rounded-xl border p-4">
+                <h3 class="text-sm font-semibold mb-3 text-slate-600 text-center">
+                  {{ group.label }}
+                </h3>
 
-              <!-- +more -->
-              <div
-                v-if="i === 5 && group.images.length > 6"
-                class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-lg font-semibold rounded-lg"
-              >
-                +{{ group.images.length - 6 }}
+                <!-- Images Grid -->
+                <div class="grid grid-cols-3 gap-2">
+                  <div v-for="(img, i) in group.images.slice(0, 6)" :key="img.id" class="relative"
+                    @click="openViewer(img, group.images)">
+                    <img :src="img.url" class="h-28 w-full object-cover rounded-lg border" />
+
+                    <!-- +more -->
+                    <div v-if="i === 5 && group.images.length > 6" class="absolute inset-0 bg-black/60 text-white flex
+                     items-center justify-center text-lg font-semibold rounded-lg">
+                      +{{ group.images.length - 6 }}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -217,7 +209,8 @@
           </div>
           <div class="flex flex-col items-end">
             <p class="font-semibold text-slate-800">{{ e.amount.toLocaleString() }} ကျပ်</p>
-            <button @click="editExpense(e)" class="text-xs text-indigo-600 mt-1 inline-flex items-center gap-1 px-2 py-1 border border-indigo-100 rounded-md hover:bg-indigo-50">
+            <button @click="editExpense(e)"
+              class="text-xs text-indigo-600 mt-1 inline-flex items-center gap-1 px-2 py-1 border border-indigo-100 rounded-md hover:bg-indigo-50">
               <span class="text-xs">✏️</span>
               <span>edit</span>
             </button>
@@ -245,7 +238,8 @@
           </div>
           <div class="flex flex-col items-end">
             <p class="font-semibold text-slate-800">{{ e.amount.toLocaleString() }} ကျပ်</p>
-            <button @click="editExpense(e)" class="text-xs text-indigo-600 mt-1 inline-flex items-center gap-1 px-2 py-1 border border-indigo-100 rounded-md hover:bg-indigo-50">
+            <button @click="editExpense(e)"
+              class="text-xs text-indigo-600 mt-1 inline-flex items-center gap-1 px-2 py-1 border border-indigo-100 rounded-md hover:bg-indigo-50">
               <span class="text-xs">✏️</span>
               <span>edit</span>
             </button>
@@ -266,70 +260,43 @@
     </NuxtLink>
   </div>
 
-  <div
-    v-if="showViewer"
-    class="fixed inset-0 bg-black z-50 flex items-center justify-center"
-    @touchstart="onTouchStart"
-    @touchend="onTouchEnd"
-  >
+  <div v-if="showViewer" class="fixed inset-0 bg-black z-50 flex items-center justify-center" @touchstart="onTouchStart"
+    @touchend="onTouchEnd">
     <!-- Close -->
-    <button
-      @click="closeViewer"
-      class="absolute top-4 right-4 text-white text-2xl bg-black/40 p-2 rounded-full"
-    >
+    <button @click="closeViewer" class="absolute top-4 right-4 text-white text-2xl bg-black/40 p-2 rounded-full">
       ✕
     </button>
 
     <!-- Top Left Actions -->
     <div class="absolute top-6 right-14 flex gap-2">
       <!-- Download -->
-      <button
-        @click="downloadImage"
-        class="bg-blue-500 backdrop-blur text-white py-1 px-2 rounded-xl"
-        title="Download"
-      >
+      <button @click="downloadImage" class="bg-blue-500 backdrop-blur text-white py-1 px-2 rounded-xl" title="Download">
         📥 Save image
       </button>
 
       <!-- Delete -->
-      <button
-        @click="confirmDelete = true"
-        class="bg-red-500 backdrop-blur text-white py-1 px-2 rounded-xl"
-        title="Delete"
-      >
+      <button @click="confirmDelete = true" class="bg-red-500 backdrop-blur text-white py-1 px-2 rounded-xl"
+        title="Delete">
         🗑️ Delete
       </button>
     </div>
 
     <!-- Prev -->
-    <button
-      @click="prevImage"
-      class="absolute left-2 text-white text-4xl select-none"
-    >
+    <button @click="prevImage" class="absolute left-2 text-white text-4xl select-none">
       ‹
     </button>
 
     <!-- Image -->
-    <img
-      :src="activeImage.url"
-      @dblclick="toggleZoom"
-      :style="{ transform: `scale(${scale})` }"
-      class="max-h-[85vh] max-w-[90vw] transition-transform duration-300 shadow-2xl rounded-xl"
-    />
+    <img :src="activeImage.url" @dblclick="toggleZoom" :style="{ transform: `scale(${scale})` }"
+      class="max-h-[85vh] max-w-[90vw] transition-transform duration-300 shadow-2xl rounded-xl" />
 
     <!-- Next -->
-    <button
-      @click="nextImage"
-      class="absolute right-2 text-white text-4xl select-none"
-    >
+    <button @click="nextImage" class="absolute right-2 text-white text-4xl select-none">
       ›
     </button>
 
     <!-- Delete Confirm Modal -->
-    <div
-      v-if="confirmDelete"
-      class="absolute inset-0 bg-black/60 flex items-center justify-center"
-    >
+    <div v-if="confirmDelete" class="absolute inset-0 bg-black/60 flex items-center justify-center">
       <div class="bg-white rounded-xl p-5 w-72 text-center space-y-4">
         <p class="font-semibold text-gray-800">
           Delete this image?
@@ -340,17 +307,11 @@
         </p>
 
         <div class="flex gap-3">
-          <button
-            @click="confirmDelete = false"
-            class="flex-1 py-2 rounded-lg border"
-          >
+          <button @click="confirmDelete = false" class="flex-1 py-2 rounded-lg border">
             Cancel
           </button>
 
-          <button
-            @click="deleteImage"
-            class="flex-1 py-2 rounded-lg bg-red-500 text-white"
-          >
+          <button @click="deleteImage" class="flex-1 py-2 rounded-lg bg-red-500 text-white">
             Delete
           </button>
         </div>
@@ -413,7 +374,7 @@ const groupedImages = computed(() => {
   })
 
   return Object.entries(groups).map(([date, imgs], i) => ({
-    label: `(${date})`,
+    label: `${date} (${imgs.length} images)`,
     images: imgs
   }))
 })
@@ -706,3 +667,13 @@ const cancelEditBudget = () => {
   isEditingBudget.value = false
 }
 </script>
+
+<style scoped>
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>
