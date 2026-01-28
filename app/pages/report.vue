@@ -196,8 +196,7 @@ onMounted(() => {
 const startDate = computed(() => {
   const d = new Date()
   if (reportMode.value === 'week') {
-    const day = d.getDay() || 7
-    d.setDate(d.getDate() - day + 1 + offset.value * 7)
+    d.setDate(d.getDate() + offset.value * 5)
   } else {
     d.setDate(1)
     d.setMonth(d.getMonth() + offset.value)
@@ -208,7 +207,7 @@ const startDate = computed(() => {
 
 const endDate = computed(() => {
   const d = new Date(startDate.value)
-  if (reportMode.value === 'week') d.setDate(d.getDate() + 6)
+  if (reportMode.value === 'week') d.setDate(d.getDate() + 3) // total 5 days
   else d.setMonth(d.getMonth() + 1, 0)
   d.setHours(23, 59, 59, 999)
   return d

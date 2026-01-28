@@ -83,6 +83,66 @@
           :value="foodTotal" />
       </div>
 
+      <!-- Progress Gallery -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mt-6">
+        <h2 class="font-semibold text-slate-700 mb-3 text-center">
+          🏠 လုပ်ငန်းတိုးတက်မှု မှတ်တမ်း
+        </h2>
+
+        <p class="text-xs text-slate-400 text-center mb-3">
+          ⇆ နေ့အလိုက် ဆွဲကြည့်နိုင်ပါတယ်
+        </p>
+
+        <div v-if="!groupedImages.length" class="text-xs text-slate-400 text-center">
+          ပုံမရှိသေးပါ
+        </div>
+
+        <!-- Slider -->
+        <div class="overflow-x-auto scrollbar-hide">
+          <div class="flex gap-4 snap-x snap-mandatory px-1">
+
+            <!-- Day Card -->
+            <div v-for="group in groupedImages" :key="group.label" class="snap-start shrink-0 w-[92%] sm:w-[420px]">
+              <div class="bg-slate-50 rounded-xl border border-slate-200
+                 shadow-sm hover:shadow-md transition p-4">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-sm font-semibold text-slate-700">
+                    📅 {{ group.label }}
+                  </h3>
+
+                  <span class="text-xs px-2 py-0.5 rounded-full
+                     bg-indigo-50 text-indigo-600 font-medium">
+                    {{ group.images.length }} ပုံ
+                  </span>
+                </div>
+
+                <!-- Images Grid -->
+                <div class="grid grid-cols-3 gap-2">
+                  <div v-for="(img, i) in group.images.slice(0, 6)" :key="img.id" class="relative rounded-lg overflow-hidden
+                     border border-slate-200
+                     active:scale-95 transition" @click="openViewer(img, group.images)">
+                    <img :src="img.url" class="h-28 w-full object-cover
+                       transition-transform duration-300
+                       hover:scale-105" />
+
+                    <!-- + More Overlay -->
+                    <div v-if="i === 5 && group.images.length > 6" class="absolute inset-0 bg-black/60
+                       text-white flex items-center justify-center
+                       text-lg font-semibold">
+                      +{{ group.images.length - 6 }}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Images -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
         <h2 class="font-semibold mb-4">➕ ပုံတင်မည်</h2>
 
@@ -96,44 +156,6 @@
 
       <div v-if="uploading" class="text-xs text-slate-500">
         ⏳ ပုံတင်နေသည်...
-      </div>
-
-      <div class="bg-white rounded-2xl p-5 border mt-6">
-        <h2 class="font-semibold mb-3">🏠 လုပ်ငန်းတိုးတက်မှု မှတ်တမ်း</h2>
-
-        <div v-if="!groupedImages.length" class="text-xs text-slate-400">
-          ပုံမရှိသေးပါ
-        </div>
-
-        <div class="overflow-x-auto scrollbar-hide">
-          <div class="flex gap-6 snap-x snap-mandatory">
-
-            <div v-for="group in groupedImages" :key="group.label" class="snap-start shrink-0 w-full max-w-md">
-              <!-- Group Card -->
-              <div class="bg-gray-100 rounded-xl border p-4">
-                <h3 class="text-sm font-semibold mb-3 text-slate-600 text-center">
-                  {{ group.label }}
-                </h3>
-
-                <!-- Images Grid -->
-                <div class="grid grid-cols-3 gap-2">
-                  <div v-for="(img, i) in group.images.slice(0, 6)" :key="img.id" class="relative"
-                    @click="openViewer(img, group.images)">
-                    <img :src="img.url" class="h-28 w-full object-cover rounded-lg border" />
-
-                    <!-- +more -->
-                    <div v-if="i === 5 && group.images.length > 6" class="absolute inset-0 bg-black/60 text-white flex
-                     items-center justify-center text-lg font-semibold rounded-lg">
-                      +{{ group.images.length - 6 }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
       </div>
 
       <!-- Add Form -->
@@ -178,11 +200,11 @@
           </div>
 
           <div class="flex gap-2">
-            <button class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl py-3 font-medium">
+            <button class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl py-2 font-medium">
               သိမ်းမယ်
             </button>
             <button v-if="editingId" type="button" @click="cancelEdit"
-              class="flex-1 border border-slate-300 rounded-xl py-3">
+              class="flex-1 border border-slate-300 rounded-xl py-2 font-medium">
               မပြင်တော့
             </button>
           </div>
@@ -191,12 +213,29 @@
 
       <!-- Pending Expenses -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-        <h2 class="font-semibold mb-3 text-slate-700">⏳ မရှင်းရသေး — Pending
+        <h2 class="font-semibold mb-3 text-slate-700 border-b pb-2">⏳ မရှင်းရသေး — Pending
           <span class="text-sm text-slate-500">{{ pendingTotal.toLocaleString() }} ကျပ်</span>
         </h2>
 
-        <div v-if="pendingExpenses.length === 0" class="text-xs text-slate-400">စာရင်းမရှိသေးပါ</div>
-        <div v-for="(e, i) in pendingExpenses" :key="e.id"
+        <div class="flex gap-2 mt-3 mb-4">
+          <button @click="pendingFilter = 'all'" :class="pendingFilter === 'all' ? activeBtn : inactiveBtn">
+            All
+          </button>
+
+          <button @click="pendingFilter = 'labor'" :class="pendingFilter === 'labor' ? activeBtn : inactiveBtn">
+            👷 အလုပ်သမားခ
+          </button>
+
+          <button @click="pendingFilter = 'material'" :class="pendingFilter === 'material' ? activeBtn : inactiveBtn">
+            🧱 ပစ္စည်းဝယ်
+          </button>
+        </div>
+
+        <div v-if="filteredPendingExpenses.length === 0" class="text-xs text-slate-400">
+          စာရင်းမရှိသေးပါ
+        </div>
+
+        <div v-for="e in filteredPendingExpenses" :key="e.id"
           class="flex justify-between border-b border-slate-100 py-3 last:border-0">
           <div>
             <p class="text-xs text-slate-400">{{ e.date }}</p>
@@ -220,7 +259,7 @@
 
       <!-- Completed Expenses -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-        <h2 class="font-semibold mb-3 text-slate-700">✅ ရှင်းပြီး — Completed
+        <h2 class="font-semibold mb-3 text-slate-700 border-b pb-2">✅ ရှင်းပြီး — Completed
           <span class="text-sm text-slate-500">{{ completedTotal.toLocaleString() }} ကျပ်</span>
         </h2>
 
@@ -260,64 +299,81 @@
     </NuxtLink>
   </div>
 
-  <div v-if="showViewer" class="fixed inset-0 bg-black z-50 flex items-center justify-center" @touchstart="onTouchStart"
+  <!-- Image Viewer -->
+  <div v-if="showViewer" class="fixed inset-0 z-50 bg-black flex items-center justify-center" @touchstart="onTouchStart"
     @touchend="onTouchEnd">
-    <!-- Close -->
-    <button @click="closeViewer" class="absolute top-4 right-4 text-white text-2xl bg-black/40 p-2 rounded-full">
-      ✕
-    </button>
-
-    <!-- Top Left Actions -->
-    <div class="absolute top-6 right-14 flex gap-2">
-      <!-- Download -->
-      <button @click="downloadImage" class="bg-blue-500 backdrop-blur text-white py-1 px-2 rounded-xl" title="Download">
-        📥 Save image
+    <!-- Top Toolbar -->
+    <div class="absolute top-4 left-4 right-4 flex items-center justify-between
+           bg-black/60 backdrop-blur-lg rounded-2xl px-4 py-2">
+      <!-- Close -->
+      <button @click="closeViewer" class="w-10 h-10 flex items-center justify-center
+             rounded-full text-white text-xl
+             hover:bg-white/10 transition">
+        ✕
       </button>
 
-      <!-- Delete -->
-      <button @click="confirmDelete = true" class="bg-red-500 backdrop-blur text-white py-1 px-2 rounded-xl"
-        title="Delete">
-        🗑️ Delete
-      </button>
+      <!-- Actions -->
+      <div class="flex gap-2">
+        <!-- Download -->
+        <button @click="downloadImage" class="flex items-center gap-1 px-3 py-1.5 rounded-xl
+               text-sm font-medium text-emerald-300
+               hover:bg-emerald-500/20 transition">
+          📥 Save
+        </button>
+
+        <!-- Delete -->
+        <button @click="confirmDelete = true" class="flex items-center gap-1 px-3 py-1.5 rounded-xl
+               text-sm font-medium text-rose-400
+               hover:bg-rose-500/20 transition">
+          🗑️ Delete
+        </button>
+      </div>
     </div>
 
     <!-- Prev -->
-    <button @click="prevImage" class="absolute left-2 text-white text-4xl select-none">
+    <button @click="prevImage" class="absolute left-2 md:left-6 text-white text-5xl
+           opacity-70 hover:opacity-100 select-none transition">
       ‹
     </button>
 
     <!-- Image -->
-    <img :src="activeImage.url" @dblclick="toggleZoom" :style="{ transform: `scale(${scale})` }"
-      class="max-h-[85vh] max-w-[90vw] transition-transform duration-300 shadow-2xl rounded-xl" />
+    <img :src="activeImage.url" @dblclick="toggleZoom" :style="{ transform: `scale(${scale})` }" class="max-h-[85vh] max-w-[92vw]
+           transition-transform duration-300
+           rounded-2xl shadow-2xl" />
 
     <!-- Next -->
-    <button @click="nextImage" class="absolute right-2 text-white text-4xl select-none">
+    <button @click="nextImage" class="absolute right-2 md:right-6 text-white text-5xl
+           opacity-70 hover:opacity-100 select-none transition">
       ›
     </button>
 
-    <!-- Delete Confirm Modal -->
-    <div v-if="confirmDelete" class="absolute inset-0 bg-black/60 flex items-center justify-center">
-      <div class="bg-white rounded-xl p-5 w-72 text-center space-y-4">
-        <p class="font-semibold text-gray-800">
+    <!-- Delete Confirmation -->
+    <div v-if="confirmDelete" class="absolute inset-0 bg-black/70 flex items-center justify-center">
+      <div class="bg-white rounded-2xl w-80 p-5 space-y-4 shadow-xl">
+        <h3 class="font-semibold text-slate-800 text-center">
           Delete this image?
+        </h3>
+
+        <p class="text-sm text-slate-500 text-center">
+          This action cannot be undone.
         </p>
 
-        <p class="text-sm text-gray-500">
-          This action cannot be undone
-        </p>
-
-        <div class="flex gap-3">
-          <button @click="confirmDelete = false" class="flex-1 py-2 rounded-lg border">
+        <div class="flex gap-3 pt-2">
+          <button @click="confirmDelete = false" class="flex-1 py-2 rounded-xl border
+                 text-slate-600 hover:bg-slate-100 transition">
             Cancel
           </button>
 
-          <button @click="deleteImage" class="flex-1 py-2 rounded-lg bg-red-500 text-white">
+          <button @click="deleteImage" class="flex-1 py-2 rounded-xl
+                 bg-rose-500 text-white
+                 hover:bg-rose-600 transition">
             Delete
           </button>
         </div>
       </div>
     </div>
   </div>
+
 
 
 </template>
@@ -361,6 +417,23 @@ const showViewer = ref(false)
 const activeImage = ref(null)
 const scale = ref(1)
 const confirmDelete = ref(false)
+const pendingFilter = ref('all') // all | labor | material
+
+const activeBtn =
+  'px-4 py-1 rounded-xl text-xs font-medium bg-indigo-500 text-white'
+
+const inactiveBtn =
+  'px-3 py-1.5 rounded-xl text-xs font-medium border border-slate-300 text-slate-600 hover:bg-slate-100'
+
+
+const filteredPendingExpenses = computed(() => {
+  const pendingExpenses = expenses.value.filter(e => (e.status || 'completed') === 'pending')
+  if (pendingFilter.value === 'all') return pendingExpenses
+
+  return pendingExpenses.filter(
+    e => e.type === pendingFilter.value
+  )
+})
 
 const groupedImages = computed(() => {
   const groups = {}
@@ -373,11 +446,12 @@ const groupedImages = computed(() => {
     groups[date].push(img)
   })
 
-  return Object.entries(groups).map(([date, imgs], i) => ({
-    label: `${date} (${imgs.length} images)`,
+  return Object.entries(groups).map(([date, imgs]) => ({
+    label: date,
     images: imgs
   }))
 })
+
 
 // touch
 let startX = 0
@@ -635,16 +709,12 @@ const grandTotal = computed(() =>
 
 const currentAmount = computed(() => Number(budget.value) - Number(grandTotal.value))
 
-const pendingExpenses = computed(() =>
-  expenses.value.filter(e => (e.status || 'completed') === 'pending')
-)
-
 const completedExpenses = computed(() =>
   expenses.value.filter(e => (e.status || 'completed') === 'completed')
 )
 
 const pendingTotal = computed(() =>
-  pendingExpenses.value.reduce((s, e) => s + Number(e.amount || 0), 0)
+  filteredPendingExpenses.value.reduce((s, e) => s + Number(e.amount || 0), 0)
 )
 
 const completedTotal = computed(() =>
@@ -672,6 +742,7 @@ const cancelEditBudget = () => {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
